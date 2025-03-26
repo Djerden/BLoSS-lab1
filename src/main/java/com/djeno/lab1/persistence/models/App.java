@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -20,7 +22,11 @@ public class App {
     @Column(nullable = false)
     private String description;
 
-    @Column(nullable = false, unique = true)
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User owner;
+
+    @Column
     private String iconId; // ID иконки в MinIO
 
     @ElementCollection
@@ -28,7 +34,7 @@ public class App {
     @Column(name = "screenshot")
     private List<String> screenshotsIds; // Список ID скриншотов в MinIO
 
-    @Column(nullable = false, unique = true)
+    @Column
     private String fileId; // ID файла в MinIO
 
     @Column(nullable = false)
@@ -44,4 +50,31 @@ public class App {
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private List<Category> categories;
+
+    @Column(nullable = false)
+    private int downloads;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void prePersist() {
+        this.downloads = 0;
+        this.createdAt = LocalDateTime.now();
+
+        if (this.screenshotsIds == null) {
+            this.screenshotsIds = new ArrayList<>();
+        }
+    }
+
+    /**
+     * Метод для получения среднего рейтинга приложения.
+     */
+    public double getAverageRating() {
+        if (reviews == null || reviews.isEmpty()) {
+            return 0.0;
+        }
+        double sum = reviews.stream().mapToInt(Review::getRating).sum();
+        return sum / reviews.size();
+    }
 }

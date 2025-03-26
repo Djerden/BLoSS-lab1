@@ -3,6 +3,8 @@ package com.djeno.lab1.persistence.models;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 @Entity
 @Table(name = "reviews")
@@ -24,4 +26,12 @@ public class Review {
 
     @Column(length = 1000)
     private String comment;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

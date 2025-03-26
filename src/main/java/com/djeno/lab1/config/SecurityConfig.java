@@ -51,6 +51,9 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-resources/*", "/v3/api-docs/**").permitAll()
 
+                        // app
+                        .requestMatchers("/app/upload").hasRole("ROLE_DEVELOPER")
+
 
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

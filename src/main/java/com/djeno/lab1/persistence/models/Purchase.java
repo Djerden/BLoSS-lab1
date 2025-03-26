@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Информация о покупках пользователей.
+ */
 @Data
 @Entity
 @Table(name = "purchases")

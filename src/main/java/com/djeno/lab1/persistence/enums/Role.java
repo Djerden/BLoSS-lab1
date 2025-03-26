@@ -2,6 +2,6 @@ package com.djeno.lab1.persistence.enums;
 
 public enum Role {
     ROLE_USER,
-    DEVELOPER,
+    ROLE_DEVELOPER,
     ROLE_ADMIN,
 }

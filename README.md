@@ -42,3 +42,4 @@ Google Play — приложения и игры — https://play.google.com.
 
 ### Выполнение:
 
+![img.png](diagram.png)

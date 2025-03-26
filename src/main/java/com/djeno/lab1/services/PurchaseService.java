@@ -5,6 +5,7 @@ import com.djeno.lab1.persistence.models.Purchase;
 import com.djeno.lab1.persistence.models.User;
 import com.djeno.lab1.persistence.repositories.PurchaseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,17 +15,13 @@ import java.time.LocalDateTime;
 public class PurchaseService {
 
     private final PurchaseRepository purchaseRepository;
-    private final UserService userService;
-    private final AppService appService;
     private final PaymentMethodService paymentMethodService;
 
     public boolean hasUserPurchasedApp(User user, App app) {
         return purchaseRepository.existsByUserAndApp(user, app);
     }
 
-    public Purchase purchaseApp(Long id) {
-        User user = userService.getCurrentUser();
-        App app = appService.getAppById(id);
+    public Purchase purchaseApp(App app, User user) {
 
         // Проверяем, не куплено ли уже
         if (hasUserPurchasedApp(user, app)) {

@@ -24,7 +24,7 @@ public class PaymentMethodController {
         return ResponseEntity.ok("Карта добавлена");
     }
 
-    @PutMapping("/card/{id}/primary")
+    @PutMapping("/card/primary/{id}")
     public ResponseEntity<Void> setPrimaryCard(@PathVariable Long id) {
         paymentMethodService.setPrimaryCard(id);
         return ResponseEntity.ok().build();

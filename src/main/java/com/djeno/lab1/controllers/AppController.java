@@ -3,9 +3,12 @@ package com.djeno.lab1.controllers;
 import com.djeno.lab1.persistence.DTO.app.AppDetailsDto;
 import com.djeno.lab1.persistence.DTO.app.AppListDto;
 import com.djeno.lab1.persistence.DTO.app.CreateAppRequest;
+import com.djeno.lab1.persistence.models.App;
 import com.djeno.lab1.persistence.models.Purchase;
+import com.djeno.lab1.persistence.models.User;
 import com.djeno.lab1.services.AppService;
 import com.djeno.lab1.services.PurchaseService;
+import com.djeno.lab1.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +27,7 @@ import java.util.List;
 @RestController
 public class AppController {
 
+    private final UserService userService;
     private final AppService appService;
     private final PurchaseService purchaseService;
 
@@ -68,8 +72,10 @@ public class AppController {
 
     @PostMapping("/purchase/{id}")
     public ResponseEntity<String> purchaseApp(@PathVariable Long id) {
-        Purchase purchase = purchaseService.purchaseApp(id);
-        return ResponseEntity.ok("Приложение оплачено");
+        App app = appService.getAppById(id);
+        User user = userService.getCurrentUser();
+        Purchase purchase = purchaseService.purchaseApp(app, user);
+        return ResponseEntity.ok("Приложение было успешно оплачено");
     }
 
 }

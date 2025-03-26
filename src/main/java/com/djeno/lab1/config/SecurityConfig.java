@@ -52,8 +52,17 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/swagger-resources/*", "/v3/api-docs/**").permitAll()
 
                         // app
-                        .requestMatchers("/app/upload").hasRole("ROLE_DEVELOPER")
+                        .requestMatchers("/app/list").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/app/{id}").permitAll()
+                        .requestMatchers("/app/upload").hasRole("DEVELOPER")
+                        .requestMatchers(HttpMethod.DELETE, "/app/{id}").hasAnyRole("DEVELOPER, ADMIN")
+                        .requestMatchers("/app/**").authenticated()
 
+                        // payment method
+                        .requestMatchers("/payment/**").authenticated()
+
+                        // review
+                        .requestMatchers("/review").authenticated()
 
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

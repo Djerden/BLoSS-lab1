@@ -56,3 +56,43 @@ http://localhost:9090/
 username: admin
 password: 12345678
 ```
+
+Локальный запуск проекта: 
+```
+gradle clean build
+
+docker-compose up
+# или если уже есть образ бекенда
+docker-compose -f docker-compose.prod.yml up
+```
+
+Запуск проекта на сервере:
+```
+# На локальной машине
+gradle clean build
+docker-compose build backend
+docker save -o backend.tar lab1-backend
+scp backend.tar docker-compose.prod.yml user@ip:/home/
+
+# На сервере 
+# Установка Docker
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+# Установка Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+# Добавление пользователя в группу docker
+sudo usermod -aG docker $USER
+newgrp docker  # Применяем изменения группы без перезагрузки
+
+# Загрузка образа
+docker load -i /home/user/backend.tar
+
+# Запуск
+docker-compose -f docker-compose.prod.yml up
+```
+Дальнейшее обращение к эндпоинтам осуществляется по http://server-ip:8080/ вместо http://localhost:8080/

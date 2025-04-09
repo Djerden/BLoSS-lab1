@@ -1,5 +1,6 @@
 package com.djeno.lab1.services;
 
+import com.djeno.lab1.exceptions.AppAlreadyPurchasedException;
 import com.djeno.lab1.persistence.models.App;
 import com.djeno.lab1.persistence.models.Purchase;
 import com.djeno.lab1.persistence.models.User;
@@ -25,15 +26,11 @@ public class PurchaseService {
 
         // Проверяем, не куплено ли уже
         if (hasUserPurchasedApp(user, app)) {
-            throw new RuntimeException("Приложение уже приобретено");
+            throw new AppAlreadyPurchasedException("Приложение уже приобретено");
         }
 
         // Пытаемся провести оплату
-        boolean paymentSuccess = paymentMethodService.processPayment(user, app.getPrice());
-
-        if (!paymentSuccess) {
-            throw new RuntimeException("Оплата не прошла. Проверьте платежные данные");
-        }
+        paymentMethodService.processPayment(user, app.getPrice());
 
         Purchase purchase = new Purchase();
         purchase.setUser(user);

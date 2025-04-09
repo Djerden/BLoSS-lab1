@@ -11,37 +11,74 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameAlreadyExists(UsernameAlreadyExistsException ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, "Username Already Exists");
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, "Email Already Exists");
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, "User Not Found");
+    }
+
+    @ExceptionHandler(AppAlreadyPurchasedException.class)
+    public ResponseEntity<ErrorResponse> handleAppAlreadyPurchased(AppAlreadyPurchasedException ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, "App Already Purchased");
+    }
+
+    @ExceptionHandler(PrimaryCardNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePrimaryCardNotFound(PrimaryCardNotFoundException ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, "Primary Card Not Found");
+    }
+
+    @ExceptionHandler(PaymentProcessingException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentProcessing(PaymentProcessingException ex) {
+        return buildErrorResponse(ex, HttpStatus.PAYMENT_REQUIRED, "Payment Failed");
+    }
+
+    @ExceptionHandler(LastPrimaryCardException.class)
+    public ResponseEntity<ErrorResponse> handleLastPrimaryCard(LastPrimaryCardException ex) {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, "Last Primary Card");
+    }
+
+    @ExceptionHandler(CardNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCardNotFound(CardNotFoundException ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, "Card Not Found");
+    }
+
+    @ExceptionHandler(PaymentRequiredException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentRequired(PaymentRequiredException ex) {
+        return buildErrorResponse(ex, HttpStatus.PAYMENT_REQUIRED, "Payment Required");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return buildErrorResponse(ex, HttpStatus.FORBIDDEN, "Access Denied");
+    }
+
+    @ExceptionHandler(AppNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAppNotFoundException(AppNotFoundException ex) {
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, "App not found");
+    }
+
     @ExceptionHandler(InvalidFileException.class)
     public ResponseEntity<ErrorResponse> handleInvalidFileException(InvalidFileException ex) {
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Invalid File",
-                ex.getMessage()
-        );
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, "Invalid File");
     }
 
     @ExceptionHandler(FileUploadException.class)
     public ResponseEntity<ErrorResponse> handleFileUploadException(FileUploadException ex) {
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "File Upload Failed",
-                ex.getMessage()
-        );
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, "File Upload Failed");
     }
 
     @ExceptionHandler(CategoryNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleCategoryNotFoundException(CategoryNotFoundException ex) {
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                "Category Not Found",
-                ex.getMessage()
-        );
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, "Category Not Found");
     }
 
     @ExceptionHandler(Exception.class)
@@ -53,5 +90,15 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private ResponseEntity<ErrorResponse> buildErrorResponse(RuntimeException ex, HttpStatus status, String error) {
+        ErrorResponse response = new ErrorResponse(
+                LocalDateTime.now(),
+                status.value(),
+                error,
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(response, status);
     }
 }

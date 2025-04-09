@@ -1,7 +1,6 @@
 package com.djeno.lab1.services;
 
-import com.djeno.lab1.exceptions.FileUploadException;
-import com.djeno.lab1.exceptions.InvalidFileException;
+import com.djeno.lab1.exceptions.*;
 import com.djeno.lab1.persistence.DTO.app.AppDetailsDto;
 import com.djeno.lab1.persistence.DTO.app.AppListDto;
 import com.djeno.lab1.persistence.DTO.app.CreateAppRequest;
@@ -41,7 +40,7 @@ public class AppService {
 
     public App getAppById(Long id) {
         return appRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Приложение не найдено"));
+                .orElseThrow(() -> new AppNotFoundException(id));
     }
 
     public void createApp(
@@ -53,7 +52,7 @@ public class AppService {
         User owner = userService.getCurrentUser();
 
         if (file == null || file.isEmpty()) {
-            throw new InvalidFileException("APK file is required");
+            throw new InvalidFileException("APK файл не загружен");
         }
 
         // Загружаем файлы в MinIO
@@ -62,7 +61,7 @@ public class AppService {
             try {
                 iconId = minioService.uploadFile(icon, MinioService.ICONS_BUCKET);
             } catch (Exception e) {
-                throw new FileUploadException("Failed to upload icon: " + e.getMessage());
+                throw new FileUploadException("Не удалось загрузить иконку: " + e.getMessage());
             }
         }
 
@@ -70,7 +69,7 @@ public class AppService {
         try {
             fileId = minioService.uploadFile(file, MinioService.APK_BUCKET);
         } catch (Exception e) {
-            throw new FileUploadException("Failed to upload APK file: " + e.getMessage());
+            throw new FileUploadException("Не удалось загрузить APK файл: " + e.getMessage());
         }
 
         List<String> screenshotsIds = new ArrayList<>();
@@ -80,7 +79,7 @@ public class AppService {
                     try {
                         screenshotsIds.add(minioService.uploadFile(screenshot, MinioService.SCREENSHOTS_BUCKET));
                     } catch (Exception e) {
-                        throw new FileUploadException("Failed to upload screenshot: " + e.getMessage());
+                        throw new FileUploadException("Не удалось загрузить скриншоты: " + e.getMessage());
                     }
                 }
             }
@@ -128,7 +127,7 @@ public class AppService {
 
         if (!app.getOwner().getId().equals(currentUser.getId()) &&
                 !currentUser.getRole().equals(Role.ROLE_ADMIN)) {
-            throw new RuntimeException("Недостаточно прав для удаления приложения");
+            throw new AccessDeniedException("Недостаточно прав для удаления приложения");
         }
 
         if (app.getIconId() != null) {
@@ -151,12 +150,15 @@ public class AppService {
         User currentUser = userService.getCurrentUser();
         App app = getAppById(id);
 
-        if (isFreeOrOwnedOrPurchased(app, currentUser)) {
-            return buildDownloadResponse(app);
+        if (!isFreeOrOwnedOrPurchased(app, currentUser)) {
+            throw new PaymentRequiredException("Для скачивания необходимо приобрести приложение");
         }
 
-        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
-                .body("Для скачивания необходимо приобрести приложение");
+        app.setDownloads(app.getDownloads() + 1);
+        appRepository.save(app);
+
+        return buildDownloadResponse(app);
+
     }
 
     private boolean isFreeOrOwnedOrPurchased(App app, User user) {
@@ -176,7 +178,7 @@ public class AppService {
     }
 
     private ResponseEntity<?> buildDownloadResponse(App app) {
-        String downloadUrl = "http://localhost:9000/" + MinioService.APK_BUCKET + "/" + app.getFileId();
+        String downloadUrl = "http://212.113.102.152:9000/" + MinioService.APK_BUCKET + "/" + app.getFileId();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -190,12 +192,12 @@ public class AppService {
                 .name(app.getName())
                 .description(app.getDescription())
                 .iconUrl(app.getIconId() != null ?
-                        "http://localhost:9000/" + MinioService.ICONS_BUCKET + "/" + app.getIconId() : null)
+                        "http://212.113.102.152:9000/" + MinioService.ICONS_BUCKET + "/" + app.getIconId() : null)
                 .screenshotUrls(app.getScreenshotsIds() == null || app.getScreenshotsIds().isEmpty() ?
                         Collections.emptyList() :
                         app.getScreenshotsIds().stream()
                                 .filter(Objects::nonNull)
-                                .map(id -> "http://localhost:9000/" + MinioService.SCREENSHOTS_BUCKET + "/" + id)
+                                .map(id -> "http://212.113.102.152:9000/" + MinioService.SCREENSHOTS_BUCKET + "/" + id)
                                 .collect(Collectors.toList()))
                 .price(app.getPrice())
                 .averageRating(app.getAverageRating())
@@ -230,7 +232,7 @@ public class AppService {
                 .id(app.getId())
                 .name(app.getName())
                 .iconUrl(app.getIconId() != null ?
-                        "http://localhost:9000/" + MinioService.ICONS_BUCKET + "/" + app.getIconId() : null)
+                        "http://212.113.102.152:9000/" + MinioService.ICONS_BUCKET + "/" + app.getIconId() : null)
                 .price(app.getPrice())
                 .averageRating(app.getAverageRating())
                 .downloads(app.getDownloads())

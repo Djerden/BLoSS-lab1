@@ -1,5 +1,9 @@
 package com.djeno.lab1.services;
 
+import com.djeno.lab1.exceptions.CardNotFoundException;
+import com.djeno.lab1.exceptions.LastPrimaryCardException;
+import com.djeno.lab1.exceptions.PaymentProcessingException;
+import com.djeno.lab1.exceptions.PrimaryCardNotFoundException;
 import com.djeno.lab1.persistence.DTO.payment.AddCardRequest;
 import com.djeno.lab1.persistence.DTO.payment.PaymentCardDTO;
 import com.djeno.lab1.persistence.models.PaymentMethod;
@@ -38,7 +42,7 @@ public class PaymentMethodService {
     public void setPrimaryCard(Long cardId) {
         User user = userService.getCurrentUser();
         PaymentMethod newPrimary = paymentMethodRepository.findByIdAndUser(cardId, user)
-                .orElseThrow(() -> new RuntimeException("Карта не найдена"));
+                .orElseThrow(() -> new CardNotFoundException("Карта не найдена"));
 
         user.getPaymentMethods().forEach(card -> {
             card.setPrimary(card.getId().equals(cardId));
@@ -59,11 +63,11 @@ public class PaymentMethodService {
     public void deleteCard(Long cardId) {
         User currentUser = userService.getCurrentUser();
         PaymentMethod card = paymentMethodRepository.findByIdAndUser(cardId, currentUser)
-                .orElseThrow(() -> new RuntimeException("Карта не найдена или не принадлежит пользователю"));
+                .orElseThrow(() -> new CardNotFoundException("Карта не найдена или не принадлежит пользователю"));
 
         // Нельзя удалить основную карту, если она последняя
         if (card.isPrimary() && paymentMethodRepository.countByUser(currentUser) == 1) {
-            throw new RuntimeException("Нельзя удалить единственную основную карту");
+            throw new LastPrimaryCardException("Нельзя удалить единственную основную карту");
         }
 
         paymentMethodRepository.delete(card);
@@ -102,13 +106,13 @@ public class PaymentMethodService {
         }
 
         PaymentMethod primaryCard = paymentMethodRepository.findByUserAndIsPrimary(user, true)
-                .orElseThrow(() -> new RuntimeException("Основная карта не найдена"));
+                .orElseThrow(() -> new PrimaryCardNotFoundException("Основная карта не найдена"));
 
         // Имитация оплаты - 50% успешных платежей
         boolean paymentSuccess = random.nextDouble() < 0.5;
 
         if (!paymentSuccess) {
-            throw new RuntimeException("Недостаточно средств на карте");
+            throw new PaymentProcessingException("Недостаточно средств на карте");
         }
 
         return true;

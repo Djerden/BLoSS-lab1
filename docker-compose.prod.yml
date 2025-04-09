@@ -1,7 +1,7 @@
 services:
   backend:
-    image: lab1-backend # Используем заранее загруженный образ
-    restart: always  # Автоперезапуск при падении
+    image: lab1-backend
+    restart: always
     ports:
       - "8080:8080"
     environment:
@@ -9,7 +9,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - MINIO_URL=http://minio:9000
     depends_on:
       - db
       - minio
@@ -24,6 +23,8 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_MAX_CONNECTIONS=300
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -33,8 +34,8 @@ services:
     image: minio/minio:latest
     restart: always
     environment:
-      - MINIO_ACCESS_KEY=admin
-      - MINIO_SECRET_KEY=12345678
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=12345678
     ports:
       - "9000:9000"
       - "9090:9090"

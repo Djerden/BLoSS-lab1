@@ -42,10 +42,10 @@ Google Play — приложения и игры — https://play.google.com.
 
 ### Выполнение:
 
-Бизнес модель: 
+**Бизнес модель:** 
 ![img.png](diagram.png)
 
-Набор эндпоинтов для взаимодействия с бекендом:
+**Набор эндпоинтов для взаимодействия с бекендом:**
 ![img.png](endpoints.png)
 Для просмотра более подробного варианта, воспользуйтесь локальной ссылкой:
 http://localhost:8080/swagger-ui/index.html#/
@@ -57,7 +57,7 @@ username: admin
 password: 12345678
 ```
 
-Локальный запуск проекта: 
+**Локальный запуск проекта:** 
 ```
 gradle clean build
 
@@ -66,7 +66,7 @@ docker-compose up
 docker-compose -f docker-compose.prod.yml up
 ```
 
-Запуск проекта на сервере:
+**Запуск проекта на сервере:**
 ```
 # На локальной машине
 gradle clean build

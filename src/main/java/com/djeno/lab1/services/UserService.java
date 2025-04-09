@@ -1,5 +1,8 @@
 package com.djeno.lab1.services;
 
+import com.djeno.lab1.exceptions.EmailAlreadyExistsException;
+import com.djeno.lab1.exceptions.UserNotFoundException;
+import com.djeno.lab1.exceptions.UsernameAlreadyExistsException;
 import com.djeno.lab1.persistence.enums.Role;
 import com.djeno.lab1.persistence.models.User;
 import com.djeno.lab1.persistence.repositories.UserRepository;
@@ -31,11 +34,11 @@ public class UserService {
     public User create(User user) {
         if (repository.existsByUsername(user.getUsername())) {
             // Заменить на свои исключения
-            throw new RuntimeException("Пользователь с таким именем уже существует");
+            throw new UsernameAlreadyExistsException("Пользователь с таким именем уже существует");
         }
 
         if (repository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Пользователь с таким email уже существует");
+            throw new EmailAlreadyExistsException("Пользователь с таким email уже существует");
         }
 
         return save(user);
@@ -48,7 +51,7 @@ public class UserService {
      */
     public User getByUsername(String username) {
         return repository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
 
     }
 
@@ -60,7 +63,7 @@ public class UserService {
     public User getByUsernameOrEmail(String identifier) {
         return repository.findByUsername(identifier)
                 .orElseGet(() -> repository.findByEmail(identifier)
-                        .orElseThrow(() -> new RuntimeException("Пользователь не найден")));
+                        .orElseThrow(() -> new UserNotFoundException("Пользователь не найден")));
     }
 
     /**

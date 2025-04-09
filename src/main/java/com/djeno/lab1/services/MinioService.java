@@ -1,6 +1,7 @@
 package com.djeno.lab1.services;
 
 import io.minio.*;
+import io.minio.http.Method;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -77,5 +78,17 @@ public class MinioService {
         if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
         }
+    }
+
+    @SneakyThrows
+    public String getFileUrl(String fileName, String bucket) throws Exception {
+        return minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Method.GET)
+                        .bucket(bucket)
+                        .object(fileName)
+                        .expiry(3600)
+                        .build()
+        );
     }
 }

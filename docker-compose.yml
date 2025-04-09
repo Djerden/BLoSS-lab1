@@ -1,17 +1,18 @@
 services:
   backend:
     build:
-      context: ./  # Путь к папке с исходниками бэкенда
-      dockerfile: Dockerfile  # Указание на Dockerfile для бэкенда
+      context: ./
+      dockerfile: Dockerfile
     ports:
-      - "8080:8080"  # Прокси порт для доступа к бэкенду
+      - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/bloss_docker_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
-      - db  # Бэкенд будет запускаться после базы данных
+      - db
+      - minio
     networks:
       - app-network
 
@@ -32,8 +33,8 @@ services:
   minio:
     image: minio/minio:latest
     environment:
-      - MINIO_ACCESS_KEY=admin
-      - MINIO_SECRET_KEY=12345678
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=12345678
     ports:
       - "9000:9000"
       - "9090:9090"

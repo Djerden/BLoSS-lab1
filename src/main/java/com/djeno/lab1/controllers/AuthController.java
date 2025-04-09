@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/auth")
-@RequiredArgsConstructor
 @Tag(name = "Аутентификация")
+@RequiredArgsConstructor
+@RequestMapping("/auth")
+@RestController
 public class AuthController {
     private final AuthenticationService authenticationService;
 

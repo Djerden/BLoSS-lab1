@@ -1,5 +1,7 @@
 package com.djeno.lab1.services;
 
+import com.djeno.lab1.exceptions.FileUploadException;
+import com.djeno.lab1.exceptions.InvalidFileException;
 import com.djeno.lab1.persistence.DTO.app.AppDetailsDto;
 import com.djeno.lab1.persistence.DTO.app.AppListDto;
 import com.djeno.lab1.persistence.DTO.app.CreateAppRequest;
@@ -51,22 +53,35 @@ public class AppService {
         User owner = userService.getCurrentUser();
 
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Требуется APK файл");
+            throw new InvalidFileException("APK file is required");
         }
 
         // Загружаем файлы в MinIO
         String iconId = null;
         if (icon != null && !icon.isEmpty()) {
-            iconId = minioService.uploadFile(icon, MinioService.ICONS_BUCKET);
+            try {
+                iconId = minioService.uploadFile(icon, MinioService.ICONS_BUCKET);
+            } catch (Exception e) {
+                throw new FileUploadException("Failed to upload icon: " + e.getMessage());
+            }
         }
 
-        String fileId = minioService.uploadFile(file, MinioService.APK_BUCKET);
+        String fileId;
+        try {
+            fileId = minioService.uploadFile(file, MinioService.APK_BUCKET);
+        } catch (Exception e) {
+            throw new FileUploadException("Failed to upload APK file: " + e.getMessage());
+        }
 
         List<String> screenshotsIds = new ArrayList<>();
         if (screenshots != null) {
             for (MultipartFile screenshot : screenshots) {
                 if (!screenshot.isEmpty()) {
-                    screenshotsIds.add(minioService.uploadFile(screenshot, MinioService.SCREENSHOTS_BUCKET));
+                    try {
+                        screenshotsIds.add(minioService.uploadFile(screenshot, MinioService.SCREENSHOTS_BUCKET));
+                    } catch (Exception e) {
+                        throw new FileUploadException("Failed to upload screenshot: " + e.getMessage());
+                    }
                 }
             }
         }

@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:8080"  # Прокси порт для доступа к бэкенду
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/coursework_db_docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/bloss_docker_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update

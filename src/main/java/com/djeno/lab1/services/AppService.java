@@ -13,10 +13,10 @@ import com.djeno.lab1.persistence.models.User;
 import com.djeno.lab1.persistence.repositories.AppRepository;
 import com.djeno.lab1.persistence.repositories.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class AppService {
@@ -131,16 +132,29 @@ public class AppService {
         }
 
         if (app.getIconId() != null) {
-            minioService.deleteFile(app.getIconId(), MinioService.ICONS_BUCKET);
+            try {
+                minioService.deleteFile(app.getIconId(), MinioService.ICONS_BUCKET);
+            } catch (Exception e) {
+                log.warn("Не удалось удалить иконку приложения из Minio: {}", e.getMessage());
+            }
         }
 
         if (app.getFileId() != null) {
-            minioService.deleteFile(app.getFileId(), MinioService.APK_BUCKET);
+            try {
+                minioService.deleteFile(app.getFileId(), MinioService.APK_BUCKET);
+            } catch (Exception e) {
+                log.warn("Не удалось удалить APK файл из Minio: {}", e.getMessage());
+            }
         }
 
         if (app.getScreenshotsIds() != null) {
-            app.getScreenshotsIds().forEach(screenId ->
-                    minioService.deleteFile(screenId, MinioService.SCREENSHOTS_BUCKET));
+            for (String screenId : app.getScreenshotsIds()) {
+                try {
+                    minioService.deleteFile(screenId, MinioService.SCREENSHOTS_BUCKET);
+                } catch (Exception e) {
+                    log.warn("Не удалось удалить скриншот из Minio: {}", e.getMessage());
+                }
+            }
         }
 
         appRepository.delete(app);

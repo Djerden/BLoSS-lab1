@@ -1,6 +1,7 @@
 package com.djeno.lab1.exceptions;
 
 import com.djeno.lab1.persistence.DTO.error.ErrorResponse;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,6 +11,11 @@ import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredJwtException(ExpiredJwtException ex) {
+        return buildErrorResponse(ex, HttpStatus.UNAUTHORIZED, "JWT Token Expired");
+    }
 
     @ExceptionHandler(UsernameAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUsernameAlreadyExists(UsernameAlreadyExistsException ex) {
@@ -29,6 +35,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AppAlreadyPurchasedException.class)
     public ResponseEntity<ErrorResponse> handleAppAlreadyPurchased(AppAlreadyPurchasedException ex) {
         return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, "App Already Purchased");
+    }
+
+    @ExceptionHandler(CardAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handlePCardAlreadyExistsException(CardAlreadyExistsException ex) {
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, "Card with this number already exists");
     }
 
     @ExceptionHandler(PrimaryCardNotFoundException.class)

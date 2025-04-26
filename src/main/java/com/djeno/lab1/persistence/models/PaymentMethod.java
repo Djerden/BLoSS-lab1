@@ -27,6 +27,9 @@ public class PaymentMethod {
     private String expirationDate;
 
     @Column(nullable = false)
+    private String cvv;
+
+    @Column(nullable = false)
     private boolean isPrimary;
 
     @PrePersist

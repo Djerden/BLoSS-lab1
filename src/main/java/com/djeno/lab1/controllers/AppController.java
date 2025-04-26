@@ -13,13 +13,11 @@ import com.djeno.lab1.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,11 +28,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Tag(name = "Взаимодействие с приложениями")
 @RequiredArgsConstructor
-@RequestMapping("/app")
+@RequestMapping("/apps")
 @RestController
 public class AppController {
 
@@ -52,21 +51,40 @@ public class AppController {
             @ApiResponse(responseCode = "400", description = "Невалидные данные"),
             @ApiResponse(responseCode = "403", description = "Доступ запрещен")
     })
-    @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping( consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('DEVELOPER')")
     public ResponseEntity<String> publishApp(
             @Parameter(description = "Метаданные приложения в формате JSON", required = true)
-            @RequestPart @Valid CreateAppRequest appData,
+            @RequestPart("appData") CreateAppRequest appData,
 
             @Parameter(description = "APK-файл", required = true)
-            @RequestPart MultipartFile file,
+            @RequestPart("file") MultipartFile file,
 
             @Parameter(description = "Иконка приложения (опционально)")
-            @RequestPart(required = false) MultipartFile icon,
+            @RequestPart(name = "icon", required = false) MultipartFile icon,
 
             @Parameter(description = "Скриншоты (опционально)")
-            @RequestPart(required = false) List<MultipartFile> screenshots
+            @RequestPart(name = "screenshots", required = false) List<MultipartFile> screenshots
     ) {
+        if (appData.getName() == null || appData.getName().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Название приложения обязательно");
+        }
+
+        if (appData.getDescription() == null || appData.getDescription().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Описание приложения обязательно");
+        }
+
+        if (appData.getPrice() == null) {
+            return ResponseEntity.badRequest().body("Цена приложения обязательна, укажите 0, если бесплатное");
+        }
+
+        if (appData.getPrice().compareTo(BigDecimal.ZERO) < 0) {
+            return ResponseEntity.badRequest().body("Цена не может быть отрицательной");
+        }
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body("APK-файл обязателен");
+        }
 
         appService.createApp(appData, icon, file, screenshots);
         return ResponseEntity.ok("Приложение загружено");
@@ -87,7 +105,7 @@ public class AppController {
                     content = @Content(schema = @Schema(implementation = Page.class))),
             @ApiResponse(responseCode = "400", description = "Неверные параметры запроса")
     })
-    @GetMapping("/list")
+    @GetMapping()
     public ResponseEntity<Page<AppListDto>> getApps(
             @RequestParam(required = false) Long categoryId,
             @PageableDefault(size = 10) Pageable pageable
@@ -148,7 +166,7 @@ public class AppController {
             @ApiResponse(responseCode = "404", description = "Файл не найден"),
             @ApiResponse(responseCode = "402", description = "Приложение не оплачено")
     })
-    @GetMapping("/download/{id}")
+    @GetMapping("/{id}/download")
     public ResponseEntity<?> downloadApp(@PathVariable Long id) {
         return appService.downloadApp(id);
     }
@@ -167,7 +185,7 @@ public class AppController {
             @ApiResponse(responseCode = "404", description = "Приложение не найдено"),
             @ApiResponse(responseCode = "402", description = "Недостаточно средств")
     })
-    @PostMapping("/purchase/{id}")
+    @PostMapping("/{id}/purchase")
     public ResponseEntity<String> purchaseApp(@PathVariable Long id) {
         App app = appService.getAppById(id);
         User user = userService.getCurrentUser();

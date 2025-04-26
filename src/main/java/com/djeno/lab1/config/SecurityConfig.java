@@ -51,18 +51,18 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-resources/*", "/v3/api-docs/**").permitAll()
 
-                        // app
-                        .requestMatchers("/app/list").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/app/{id}").permitAll()
-                        .requestMatchers("/app/upload").hasRole("DEVELOPER")
-                        .requestMatchers(HttpMethod.DELETE, "/app/{id}").hasAnyRole("DEVELOPER, ADMIN")
-                        .requestMatchers("/app/**").authenticated()
+                        // apps
+                        .requestMatchers(HttpMethod.GET, "/apps").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/apps/{id}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/apps").hasRole("DEVELOPER")
+                        .requestMatchers(HttpMethod.DELETE, "/apps/{id}").hasAnyRole("DEVELOPER", "ADMIN")
+                        .requestMatchers("/apps/**").authenticated()
 
-                        // payment method
-                        .requestMatchers("/payment/**").authenticated()
+                        // cards
+                        .requestMatchers("/cards/**").authenticated()
 
-                        // review
-                        .requestMatchers("/review").authenticated()
+                        // reviews
+                        .requestMatchers("/reviews").authenticated()
 
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

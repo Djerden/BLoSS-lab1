@@ -17,4 +17,7 @@ public interface PaymentMethodRepository extends JpaRepository<PaymentMethod, Lo
 
     int countByUser(User user);
     Optional<PaymentMethod> findFirstByUser(User user);
+
+    boolean existsByUserAndCardNumber(User user, String cardNumber);
+
 }

@@ -13,13 +13,17 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Validated
 @Tag(name = "Взаимодействие с картами")
 @RequiredArgsConstructor
-@RequestMapping("/payment")
+@RequestMapping("/cards")
 @RestController
 public class PaymentMethodController {
 
@@ -35,13 +39,22 @@ public class PaymentMethodController {
             @ApiResponse(responseCode = "400", description = "Неверные данные карты"),
             @ApiResponse(responseCode = "403", description = "Требуется авторизация")
     })
-    @PostMapping("/card")
+    @PostMapping()
     public ResponseEntity<String> addCard(
             @Parameter(description = "Данные карты", required = true)
             @RequestBody
             @Valid
-            AddCardRequest request) {
-        PaymentMethod card = paymentMethodService.addCard(request);
+            AddCardRequest request,
+            BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.toList());
+            return ResponseEntity.badRequest().body(errors.toString());
+        }
+
+        paymentMethodService.addCard(request);
         return ResponseEntity.ok("Карта добавлена");
     }
 
@@ -58,10 +71,10 @@ public class PaymentMethodController {
             @ApiResponse(responseCode = "404", description = "Карта не найдена"),
             @ApiResponse(responseCode = "403", description = "Требуется авторизация")
     })
-    @PutMapping("/card/primary/{id}")
-    public ResponseEntity<Void> setPrimaryCard(@PathVariable Long id) {
+    @PatchMapping("/{id}/primary")
+    public ResponseEntity<String> setPrimaryCard(@PathVariable Long id) {
         paymentMethodService.setPrimaryCard(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Основная карта изменена");
     }
 
     @Operation(
@@ -73,7 +86,7 @@ public class PaymentMethodController {
             @ApiResponse(responseCode = "200", description = "Список карт получен"),
             @ApiResponse(responseCode = "403", description = "Требуется авторизация")
     })
-    @GetMapping("/cards")
+    @GetMapping()
     public ResponseEntity<List<PaymentCardDTO>> getUserCards() {
         List<PaymentCardDTO> cards = paymentMethodService.getUserCards();
         return ResponseEntity.ok(cards);
@@ -92,7 +105,7 @@ public class PaymentMethodController {
             @ApiResponse(responseCode = "404", description = "Карта не найдена"),
             @ApiResponse(responseCode = "403", description = "Требуется авторизация")
     })
-    @DeleteMapping("/card/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteCard(@PathVariable Long id) {
         paymentMethodService.deleteCard(id);
         return ResponseEntity.ok("Карта успешно удалена");

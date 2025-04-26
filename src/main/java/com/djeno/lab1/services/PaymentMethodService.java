@@ -1,9 +1,6 @@
 package com.djeno.lab1.services;
 
-import com.djeno.lab1.exceptions.CardNotFoundException;
-import com.djeno.lab1.exceptions.LastPrimaryCardException;
-import com.djeno.lab1.exceptions.PaymentProcessingException;
-import com.djeno.lab1.exceptions.PrimaryCardNotFoundException;
+import com.djeno.lab1.exceptions.*;
 import com.djeno.lab1.persistence.DTO.payment.AddCardRequest;
 import com.djeno.lab1.persistence.DTO.payment.PaymentCardDTO;
 import com.djeno.lab1.persistence.models.PaymentMethod;
@@ -14,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -29,11 +27,16 @@ public class PaymentMethodService {
     public PaymentMethod addCard(AddCardRequest request) {
         User user = userService.getCurrentUser();
 
+        if (paymentMethodRepository.existsByUserAndCardNumber(user, request.getCardNumber())) {
+            throw new CardAlreadyExistsException("Эта карта уже привязана к вашему аккаунту");
+        }
+
         PaymentMethod card = new PaymentMethod();
         card.setUser(user);
         card.setCardNumber(request.getCardNumber());
         card.setCardHolder(request.getCardHolder());
         card.setExpirationDate(request.getExpirationDate());
+        card.setCvv(request.getCvv());
         card.setPrimary(user.getPaymentMethods().isEmpty()); // Первая карта становится основной
 
         return paymentMethodRepository.save(card);
@@ -91,13 +94,30 @@ public class PaymentMethodService {
     }
 
     private String maskCardNumber(String cardNumber) {
-        if (cardNumber == null || cardNumber.length() < 12) {
-            return "****"; // Запасной вариант для некорректных номеров
+        if (cardNumber == null || cardNumber.isEmpty()) {
+            return "****";
         }
-        // Оставляем первые 4 и последние 4 цифры, остальное маскируем
-        String firstFour = cardNumber.substring(0, 4);
-        String lastFour = cardNumber.substring(cardNumber.length() - 4);
-        return firstFour + " **** **** " + lastFour;
+
+        // Удаляем все нецифровые символы
+        String cleanNumber = cardNumber.replaceAll("[^0-9]", "");
+
+        if (cleanNumber.length() < 8) {
+            return "****" + (cleanNumber.isEmpty() ? "" : " " + cleanNumber);
+        }
+
+        // Первые 4 и последние 4 цифры
+        String firstFour = cleanNumber.substring(0, 4);
+        String lastFour = cleanNumber.substring(cleanNumber.length() - 4);
+
+        // Маскируем среднюю часть (ровно столько символов, сколько нужно)
+        int maskedDigits = cleanNumber.length() - 8;
+        String maskedMiddle = String.join("", Collections.nCopies(maskedDigits, "*"));
+
+        // Форматируем с пробелами (каждые 4 символа)
+        String formatted = firstFour + " " + maskedMiddle + " " + lastFour;
+
+        // Удаляем возможные лишние пробелы
+        return formatted.replaceAll(" {2,}", " ").trim();
     }
 
     public boolean processPayment(User user, BigDecimal amount) {
